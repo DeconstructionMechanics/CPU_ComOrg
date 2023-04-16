@@ -23,9 +23,9 @@
 module Dmem (
     clk,
     addr,
-    wea,  // write_enable
-    wd,   // write_data
-    rd    // read_data
+    wea,  // writeEnable
+    wd,   // writeData
+    rd    // readData
 );
 
   input clk;
@@ -38,7 +38,7 @@ module Dmem (
   wire clk_n;
   assign clk_n = !clk;
 
-  RAM ram (
+  DataRam ram (
       .addra(addr[15:2]),
       .clka (clk_n),
       .wea  (wea),
