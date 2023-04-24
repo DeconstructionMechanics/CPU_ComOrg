@@ -20,3 +20,32 @@ pipeline SIMD 中断
 +SIMD instruction
 
 ![](img/README/basicOps.png)
+
+## ref
+
+文盲→_→ 14:56:13
+https://github.com/NYH-Dolphin/SUSTech-Course-Info/tree/main/CS202%20Computer%20Organization/CPU%20submodel
+
+文盲→_→ 14:56:13
+https://github.com/Fu188/SUSTech_Course/tree/master/CS202_Computer_Organization/CPU
+
+文盲→_→ 14:56:13
+http://www.e-elements.com/product/index.shtml
+
+文盲→_→ 14:56:13
+https://github.com/mshr-h/vscode-verilog-hdl-support
+
+文盲→_→ 14:56:13
+https://marketplace.visualstudio.com/items?itemName=Truecrab.verilog-testbench-instance
+
+文盲→_→ 14:56:13
+https://github.com/czh9919/czh-verilog-snippet
+
+文盲→_→ 14:56:14
+https://github.com/bmpenuelas/systemverilog-formatter-vscode
+
+文盲→_→ 14:56:14
+https://send.cra.moe/#/?id=kD2rjvrz8jPzgkKg
+
+
+
