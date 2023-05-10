@@ -1,5 +1,5 @@
 
-![](img/README/InsFormat.png)
+![](img/InsFormat.png)
 
 ## **R-format**
 |description|name|format|
@@ -60,13 +60,22 @@ pc = {pc[31:28],addr,00}, $ra = pc(next)|jal |`000011_(26'addr)`
 |set cycle counter to 0|$v0 = 11|||
 
 ## **exception code (break)**
-|code|description|handler|hierarchy(less is front)|
-|---|---|---|---|
-1|restart|start from begin|1
-2|err|pause with error|2
-3|continue|program continue|3
-4|pause|program pause|4
+|code|description|handler|
+|---|---|---|
+1|restart|start from begin|
+2|err|pause with error|
+3|continue|program continue|
+4|pause|program pause|
+5|uart start|start uart|
+6|uart finish|finish uart|
 
+## **CPU mode**
+|code|description|
+|---|---|
+|2|error|
+|4|pause|
+|5|running|
+|6|uarting|
 
 
 
