@@ -26,17 +26,17 @@ rd = 1 if rs <(unsign) rt|sltu |`000000_xxxrs_xxxrt_xxxrd_00000_101011`
 |description|name|format|
 |---|---|---|
 rs == rt goto immediate|beq |`000100_xxxrs_xxxrt_xxxxxxximmediate`
-rs != rt goto immediate|bne |`00_0101_xxxrs_xxxrt_xxxxxxximmediate`
-rt <- mem((rs) + immediate)|lw |`10_0011_xxxrs_xxxrt_xxxxxxximmediate`
-rt -> mem((rs) + immediate)|sw |`10_1011_xxxrs_xxxrt_xxxxxxximmediate`
-rt = rs + i|addi |`00_1000_xxxrs_xxxrt_xxxxxxximmediate`
-rt = rs +(unsign) i|addiu |`00_1001_xxxrs_xxxrt_xxxxxxximmediate`
-rt = 1 if rs < i|slti |`00_1010_xxxrs_xxxrt_xxxxxxximmediate`
-rt = 1 if rs <(unsign) i|sltiu |`00_1011_xxxrs_xxxrt_xxxxxxximmediate`
-rt = rs and i|andi |`00_1100_xxxrs_xxxrt_xxxxxxximmediate`
-rt = rs or i|ori |`00_1101_xxxrs_xxxrt_xxxxxxximmediate`
-rt = rs xor i|xori |`00_1110_xxxrs_xxxrt_xxxxxxximmediate`
-rt[31:16] = i|lui |`00_1111_00000_xxxrt_xxxxxxximmediate`
+rs != rt goto immediate|bne |`000101_xxxrs_xxxrt_xxxxxxximmediate`
+rt <- mem((rs) + immediate)|lw |`100011_xxxrs_xxxrt_xxxxxxximmediate`
+rt -> mem((rs) + immediate)|sw |`101011_xxxrs_xxxrt_xxxxxxximmediate`
+rt = rs + i|addi |`001000_xxxrs_xxxrt_xxxxxxximmediate`
+rt = rs +(unsign) i|addiu |`001001_xxxrs_xxxrt_xxxxxxximmediate`
+rt = 1 if rs < i|slti |`001010_xxxrs_xxxrt_xxxxxxximmediate`
+rt = 1 if rs <(unsign) i|sltiu |`001011_xxxrs_xxxrt_xxxxxxximmediate`
+rt = rs and i|andi |`001100_xxxrs_xxxrt_xxxxxxximmediate`
+rt = rs or i|ori |`001101_xxxrs_xxxrt_xxxxxxximmediate`
+rt = rs xor i|xori |`001110_xxxrs_xxxrt_xxxxxxximmediate`
+rt[31:16] = i|lui |`001111_00000_xxxrt_xxxxxxximmediate`
 
 ## **J-format**
 |description|name|format|
