@@ -55,7 +55,8 @@ pc = {pc[31:28],addr,00}, $ra = pc(next)|jal |`000011_(26'addr)`
 |---|---|---|---|
 |display in led|$v0 = 1|$a0 = data to display| |
 |read from switch|$v0 = 5| |$v0 = data read|
-|SIMD add|$v0 = 9|$a0 = src addr1 $a1 = src addr2 $a2 = dest addr||
+|SIMD load|$v0 = 8|$a0 = src addr $a1 = 0(first 128bit reg)/1(second 128bit reg)||
+|SIMD add and store|$v0 = 9|$a0 = dest addr||
 |get cycle counter|$v0 = 10||$v0 = cycle counter|
 |set cycle counter to 0|$v0 = 11|||
 
