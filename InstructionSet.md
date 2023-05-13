@@ -11,6 +11,10 @@ rt shift right by rs -> rd|srlv |`000000_xxxrs_xxxrt_xxxrd_00000_000110`
 rt shift right by shamt(fill with rt[31]) -> rd|sra |`000000_00000_xxxrt_xxxrd_shamt_000011`
 rt shift right by rs(fill with rt[31]) -> rd|srav |`000000_xxxrs_xxxrt_xxxrd_00000_000111`
 jump to (rs)|jr |`000000_xxxrs_00000_00000_00000_001000`
+rd = $hi |mfhi |`000000_00000_00000_xxxrd_00000_010000`
+rd = $lo |mflo |`000000_00000_00000_xxxrd_00000_010010`
+{hi,lo} = rs * rt |mult |`000000_xxxrs_xxxrt_00000_00000_011000`
+{hi,lo} = rs *(unsign) rt |multu |`000000_xxxrs_xxxrt_00000_00000_011001`
 rd = rt + rs|add |`000000_xxxrs_xxxrt_xxxrd_00000_100000`
 rd = rt +(unsign) rs|addu |`000000_xxxrs_xxxrt_xxxrd_00000_100001`
 rd = rs - rt|sub |`000000_xxxrs_xxxrt_xxxrd_00000_100010`
@@ -21,6 +25,8 @@ rd = rs xor rt|xor |`000000_xxxrs_xxxrt_xxxrd_00000_100110`
 rd = rs nor rt|nor |`000000_xxxrs_xxxrt_xxxrd_00000_100111`
 rd = 1 if rs < rt|slt |`000000_xxxrs_xxxrt_xxxrd_00000_101010`
 rd = 1 if rs <(unsign) rt|sltu |`000000_xxxrs_xxxrt_xxxrd_00000_101011`
+
+additional instructions: mfhi,mflo,mult,multu
 
 ## **I-format**
 |description|name|format|
@@ -55,7 +61,7 @@ pc = {pc[31:28],addr,00}, $ra = pc(next)|jal |`000011_(26'addr)`
 |---|---|---|---|
 |display in led|$v0 = 1|$a0 = data to display| |
 |read from switch|$v0 = 5| |$v0 = data read|
-|SIMD load|$v0 = 8|$a0 = src addr $a1 = 0(first 128bit reg)/1(second 128bit reg)||
+|SIMD load|$v0 = 8|$a0 = source address $a1 = false(first 128bit reg)/true(second 128bit reg)||
 |SIMD add and store|$v0 = 9|$a0 = dest addr||
 |get cycle counter|$v0 = 10||$v0 = cycle counter|
 |set cycle counter to 0|$v0 = 11|||
@@ -70,6 +76,8 @@ pc = {pc[31:28],addr,00}, $ra = pc(next)|jal |`000011_(26'addr)`
 5|uart start|start uart|
 6|uart finish|finish uart|
 
+exception hierarchy(front will be handled first): 6,5,1,2,3,4
+
 ## **CPU mode**
 |code|description|
 |---|---|
@@ -78,5 +86,17 @@ pc = {pc[31:28],addr,00}, $ra = pc(next)|jal |`000011_(26'addr)`
 |5|running|
 |6|uarting|
 
+## **exception mode hierarchy**
+|exc code|2|4|5|6|x|
+|---|---|---|---|---|---|
+|1|5|5|5||5|
+|2|2|2|2||2|
+|3||5|5||5|
+|4||4|4||4|
+|5|6|6|6|6|6|
+|6|||5|5|5|
 
+empty is unchange in code layer
 
+## **sth. about memory block generator**
+![](img/block_mem_gen_wf.png)
