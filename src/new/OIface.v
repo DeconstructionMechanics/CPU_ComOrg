@@ -26,15 +26,19 @@ module OIface(
     input[3:0] keyboard_col_i,
     output[23:0] led_24_o,
 
+    input[3:0] exc_code_i,
     input[3:0] mode_i,
     input IO_able_i,
     input[31:0] IO2led_i,
-    output[31:0] IO2cpu_o
+    output[31:0] IO2cpu_o,
+
+    input upg_rst_i,
+    input upg_rx_i,
+    input upg_wen_i,
+    input upg_done_i
     );
 
 reg[31:0] led_buffer = 32'd0;
-assign led_24_o[23:20] = mode_i;
-assign led_24_o[19:0] = led_buffer[19:0];
 
 reg buffer_valid = 1'b1;
 always @(mode_i or IO_able_i)begin
@@ -42,15 +46,15 @@ always @(mode_i or IO_able_i)begin
         led_buffer = 32'hffffffff;
         buffer_valid = 1'b0;
     end
+    else if(mode_i == 4'd6)begin
+        led_buffer = {28'd0,upg_rst_i,upg_rx_i,upg_wen_i,upg_done_i};
+    end
     else if(IO_able_i)begin
         led_buffer = IO2led_i;
         buffer_valid = 1'b1;
     end
     else if(~buffer_valid) begin
         led_buffer = 32'd0;
-    end
-    else begin
-        led_buffer = led_buffer;
     end
 end
 
@@ -103,7 +107,19 @@ always @(keyboard_value,switch_24_i) begin
     end
 end
 always @(*)begin
-    switch_buffer = valid_flag? {28'd0,keyboard_value} : {8'd0,switch_24_i};
+    if(valid_flag)begin
+        switch_buffer[7:0] = {4'd0,keyboard_value};
+    end
+    else begin
+        switch_buffer = {8'd0,switch_24_i};
+    end
 end
+
+
+assign led_24_o[23:20] = mode_i;
+// assign led_24_o[19:16] = keyboard_col_i;
+// assign led_24_o[15:12] = keyboard_row_i;
+// assign led_24_o[11:0] = led_buffer[11:0];
+assign led_24_o[19:0] = led_buffer[19:0];
 
 endmodule
