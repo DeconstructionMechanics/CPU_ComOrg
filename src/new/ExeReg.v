@@ -57,6 +57,7 @@ reg [127:0] add1 = 128'd0;
 reg [127:0] add2 = 128'd0;
 reg [127:0] add_r = 128'd0;
 
+
 wire[5:0] opcode = instruction_i[31:26];
 wire[4:0] rs = instruction_i[25:21];
 wire[4:0] rt = instruction_i[20:16];
@@ -105,9 +106,13 @@ assign exc_code_o = exc_code;
 reg[4:0] wb_index = 5'd0;
 reg[31:0] wb_data = 32'h00000000;
 
+integer i;
 initial begin
-    reg_32[0] = 32'h00000000;
+    for (i = 0; i < 29; i = i + 1) begin
+        reg_32[i] = 32'd0;
+    end
     reg_32[29] = 32'h00003fff;
+    reg_32[30] = 32'h00000000;
     reg_32[31] = 32'h00000000;
 end
 
@@ -352,7 +357,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= rd;
-                    wb_data[31:1] = 31'd0;
+                    wb_data[31:1] <= 31'd0;
                     wb_data[0] <= (reg_32[rs] < reg_32[rt]);
                 end
             6'b101011:begin //sltu
@@ -365,7 +370,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= rd;
-                    wb_data[31:1] = 31'd0;
+                    wb_data[31:1] <= 31'd0;
                     wb_data[0] <= $signed(reg_32[rs]) < $signed(reg_32[rt]);
                 end
 
@@ -547,7 +552,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= rt;
-                    wb_data[31:1] = 31'd0;
+                    wb_data[31:1] <= 31'd0;
                     wb_data[0] <= $signed(reg_32[rs]) < $signed({{16{immediate[15]}},immediate});
                 end
             6'b001011:begin //sltiu
@@ -560,7 +565,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= rt;
-                    wb_data[31:1] = 31'd0;
+                    wb_data[31:1] <= 31'd0;
                     wb_data[0] <= (reg_32[rs]) < {16'd0,immediate};
                 end
             6'b001100:begin //andi
