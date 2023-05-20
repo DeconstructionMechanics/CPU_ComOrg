@@ -23,6 +23,7 @@
 module IFetch(
 input clk_i,
 input[3:0] mode_i, // CPU mode
+input reset_i,
 input j_valid_i,
 input[25:0] j_addr_i,
 input b_valid_i,
@@ -45,8 +46,11 @@ wire upg_mode = ~upg_rst_i & ~upg_done_i;
 reg[31:0] pc;
 assign pc_plus4_o = pc + 32'd1;
 
-always @(negedge clk_i) begin
-    if(pc[15:0] > 16'h3fff || mode_i == 4'd6)begin
+always @(negedge clk_i or posedge reset_i) begin
+    if(reset_i)begin
+        pc <= 32'd0;
+    end
+    else if(pc[15:0] > 16'h3fff || mode_i == 4'd6)begin
         pc <= 32'd0;
     end
     else if(j_valid_i)begin
