@@ -44,6 +44,15 @@ wire set_cnt;
 wire[31:0] cycle_cnt;
 wire[3:0] exc_code;
 wire[3:0] mode;
+reg reset = 1'd1;
+always @(posedge clk)begin
+    if(exc_code == 4'd1 | btn_rst | btn_uart)begin
+        reset <= 1'd1;
+    end
+    else begin
+        reset <= 1'd0;
+    end
+end
 CtrlClk  u_CtrlClk (
     .fpga_clk_i              ( fpga_clk    ),
     .set_cnt_i               ( set_cnt     ),
@@ -132,6 +141,7 @@ wire[31:0] instruction;
 IFetch  u_IFetch (
     .clk_i                   ( clk           ),
     .mode_i                  ( mode          ),
+    .reset_i                 (reset),
     .j_valid_i               ( j_valid       ),
     .j_addr_i                ( j_addr        ),
     .b_valid_i               ( b_valid       ),
@@ -149,13 +159,12 @@ IFetch  u_IFetch (
 
 wire[31:0] IO2led;
 wire[31:0] IO2cpu;
-wire j_valid_exe;
-wire[25:0] j_addr_exe;
 wire IO_able_o;
 
 ExeReg  u_ExeReg (
     .clk_i                   ( clk              ),
     .mode_i                  ( mode             ),
+    .reset_i                 (reset),
     .data_load_32_i          ( data_load_32     ),
     .data_load_128_i         ( data_load_128    ),
     .pc_plus4_i              ( pc_plus4         ),
@@ -169,17 +178,14 @@ ExeReg  u_ExeReg (
     .data_store_32_o         ( data_store_32    ),
     .data_wen_128_o          ( data_wen_128     ),
     .data_store_128_o        ( data_store_128   ),
-    .j_valid_o               ( j_valid_exe          ),
-    .j_addr_o                ( j_addr_exe           ),
+    .j_valid_o               ( j_valid          ),
+    .j_addr_o                ( j_addr           ),
     .b_valid_o               ( b_valid          ),
     .b_addr_o                ( b_addr           ),
     .set_cnt_o               (set_cnt),
     .IO_able_o               (IO_able_o),
     .IO_o                    ( IO2led)
 );
-
-assign j_valid = (exc_code == 4'd1 | btn_rst | btn_uart)? 1'b1 : j_valid_exe;
-assign j_addr = (exc_code == 4'd1 | btn_rst | btn_uart)? 26'd0 : j_addr_exe;
 
 
 OIface  u_OIface (
