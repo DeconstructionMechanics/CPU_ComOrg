@@ -23,6 +23,7 @@
 module ExeReg(
 input clk_i,
 input[3:0] mode_i,
+input reset_i,
 
 input[31:0] data_load_32_i,
 input[127:0] data_load_128_i,
@@ -106,15 +107,6 @@ assign exc_code_o = exc_code;
 reg[4:0] wb_index = 5'd0;
 reg[31:0] wb_data = 32'h00000000;
 
-integer i;
-initial begin
-    for (i = 0; i < 29; i = i + 1) begin
-        reg_32[i] = 32'd0;
-    end
-    reg_32[29] = 32'h00003fff;
-    reg_32[30] = 32'h00000000;
-    reg_32[31] = 32'h00000000;
-end
 
 always @(posedge clk_i)begin
     if(mode_i == 4'd5 && opcode == 6'd0)begin //R-format
@@ -645,6 +637,8 @@ always @(posedge clk_i)begin
     end
 end
 
+integer i;
+
 always @(negedge clk_i)begin
     if(to_load != 5'd0 && to_load < 5'd28)begin
         reg_32[to_load] <= data_load_32_i;
@@ -658,6 +652,15 @@ always @(negedge clk_i)begin
     end
     else if(simd_load && ~reg_32[5])begin
         add2 <= data_load_128_i;
+    end
+
+    if(reset_i)begin
+        for (i = 0; i < 29; i = i + 1) begin
+            reg_32[i] = 32'd0;
+        end
+        reg_32[29] = 32'h00003fff;
+        reg_32[30] = 32'h00000000;
+        reg_32[31] = 32'h00000000;
     end
 end
 
