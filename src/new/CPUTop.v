@@ -23,7 +23,8 @@
 module CPUTop(
     input btn_rst,
     input btn_err,
-    input btn_pause_continue,
+    input btn_pause,
+    input btn_continue,
     input btn_uart,
     
     input fpga_clk,
@@ -47,6 +48,11 @@ CtrlClk  u_CtrlClk (
     .fpga_clk_i              ( fpga_clk    ),
     .set_cnt_i               ( set_cnt     ),
     .exc_code_i              ( exc_code    ),
+    .btn_rst_i               (btn_rst),
+    .btn_err_i               (btn_err),
+    .btn_pause_i             (btn_pause),
+    .btn_continue_i          (btn_continue),
+    .btn_uart_i              (btn_uart),
 
     .clk_o                   ( clk         ),
     .cycle_cnt_o             ( cycle_cnt   ),
@@ -61,7 +67,18 @@ wire [14:0] upg_adr_o;
 wire [31:0] upg_dat_o;
 wire upg_done_o;
 
-wire upg_rst = (mode != 4'd6);
+reg upg_rst;
+always @(mode or upg_done_o)begin
+    if(upg_done_o)begin
+        upg_rst = 1'd1;
+    end
+    else if(mode == 4'd6)begin
+        upg_rst = 1'b0;
+    end
+    else begin
+        upg_rst = 1'b1;
+    end
+end
 
 UartBmpg_0 uart(
 .upg_clk_i(clk),
@@ -75,18 +92,6 @@ UartBmpg_0 uart(
 .upg_tx_o(tx)
 );
 
-wire cond5 = (mode != 4'd6 & btn_uart);
-wire cond6 = btn_uart;
-wire cond1 = btn_rst;
-wire cond2 = btn_err;
-wire cond3 = (mode != 4'd4 & btn_pause_continue);
-wire cond4 = btn_pause_continue;
-
-wire[3:0] hw_exc_code;
-assign hw_exc_code[3] = 1'b0;
-assign hw_exc_code[2] = cond5 | cond6 | ~cond1 & ~cond2 & ~cond3 & cond4;
-assign hw_exc_code[1] = ~cond5 & cond6 | ~cond1 & cond2 | cond3;
-assign hw_exc_code[0] = cond5 | ~cond6 & cond1 | ~cond2 & cond3;
 
 //data memory
 wire[31:0] data_addr;
@@ -142,7 +147,6 @@ IFetch  u_IFetch (
     .instruction_o           ( instruction   )
 );
 
-wire[3:0] sw_exc_code;
 wire[31:0] IO2led;
 wire[31:0] IO2cpu;
 wire j_valid_exe;
@@ -159,7 +163,7 @@ ExeReg  u_ExeReg (
     .cycle_cnt_i             (cycle_cnt),
     .IO_i                    ( IO2cpu),
 
-    .exc_code_o              ( sw_exc_code      ),
+    .exc_code_o              ( exc_code      ),
     .data_addr_o             ( data_addr        ),
     .data_wen_32_o           ( data_wen_32      ),
     .data_store_32_o         ( data_store_32    ),
@@ -174,10 +178,8 @@ ExeReg  u_ExeReg (
     .IO_o                    ( IO2led)
 );
 
-assign exc_code = hw_exc_code == 4'd0 ? sw_exc_code : hw_exc_code;
-
-assign j_valid = (exc_code == 4'd1)? 1'b1 : j_valid_exe;
-assign j_addr = (exc_code == 4'd1)? 26'd0 : j_addr_exe;
+assign j_valid = (exc_code == 4'd1 | btn_rst | btn_uart)? 1'b1 : j_valid_exe;
+assign j_addr = (exc_code == 4'd1 | btn_rst | btn_uart)? 26'd0 : j_addr_exe;
 
 
 OIface  u_OIface (
@@ -186,7 +188,13 @@ OIface  u_OIface (
     .keyboard_col_i          ( keyboard_col   ),
     .IO_able_i               (IO_able_o),
     .IO2led_i                ( IO2led         ),
-    .mode_i                  (mode),
+    .exc_code_i              (exc_code),
+    .mode_i                  (mode),     
+
+    .upg_rst_i               (upg_rst),
+    .upg_rx_i                (rx),
+    .upg_wen_i               (upg_wen_o),
+    .upg_done_i              (upg_done_o),  
 
     .led_24_o                ( led_24         ),
     .IO2cpu_o                ( IO2cpu         ) 
