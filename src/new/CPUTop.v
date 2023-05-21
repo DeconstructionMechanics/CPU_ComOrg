@@ -79,17 +79,17 @@ wire upg_done_o;
 reg upg_rst;
 always @(mode or upg_done_o)begin
     if(upg_done_o)begin
-        upg_rst = 1'd1;
+        upg_rst <= 1'd1;
     end
     else if(mode == 4'd6)begin
-        upg_rst = 1'b0;
+        upg_rst <= 1'b0;
     end
     else begin
-        upg_rst = 1'b1;
+        upg_rst <= 1'b1;
     end
 end
 
-UartBmpg_0 uart(
+uart_bmpg_0 uart(
 .upg_clk_i(clk),
 .upg_rst_i(upg_rst),
 .upg_rx_i(rx),
@@ -189,13 +189,15 @@ ExeReg  u_ExeReg (
 
 
 OIface  u_OIface (
+    .clk_i                   (clk),
     .switch_24_i             ( switch_24      ),
     .keyboard_row_i          ( keyboard_row   ),
     .keyboard_col_i          ( keyboard_col   ),
     .IO_able_i               (IO_able_o),
     .IO2led_i                ( IO2led         ),
     .exc_code_i              (exc_code),
-    .mode_i                  (mode),     
+    .mode_i                  (mode), 
+    .reset_i                 (reset),    
 
     .upg_rst_i               (upg_rst),
     .upg_rx_i                (rx),
