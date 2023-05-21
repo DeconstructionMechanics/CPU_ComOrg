@@ -48,7 +48,7 @@ Clk_10MHz  u_Clk_10MHz (
     .clk_out1                ( clk   )
 );
 
-always @(posedge set_cnt_i) begin
+always @(negedge clk)begin
     if(set_cnt_i)begin
         cycle_cnt <= 32'd0;
     end
