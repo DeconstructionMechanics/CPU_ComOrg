@@ -350,7 +350,7 @@ always @(posedge clk_i)begin
 
                     wb_index <= rd;
                     wb_data[31:1] <= 31'd0;
-                    wb_data[0] <= (reg_32[rs] < reg_32[rt]);
+                    wb_data[0] <= $signed(reg_32[rs]) < $signed(reg_32[rt]);
                 end
             6'b101011:begin //sltu
                     simd_load <= 1'b0;
@@ -363,7 +363,7 @@ always @(posedge clk_i)begin
 
                     wb_index <= rd;
                     wb_data[31:1] <= 31'd0;
-                    wb_data[0] <= $signed(reg_32[rs]) < $signed(reg_32[rt]);
+                    wb_data[0] <= (reg_32[rs] < reg_32[rt]);
                 end
 
             6'b001100:begin //syscall
@@ -640,28 +640,33 @@ end
 integer i;
 
 always @(negedge clk_i)begin
-    if(to_load != 5'd0 && to_load < 5'd28)begin
+    if(reset_i)begin
+        for (i = 0; i < 29; i = i + 1) begin
+            reg_32[i] <= 32'd0;
+        end
+        reg_32[29] <= 32'h00003fff;
+        reg_32[30] <= 32'h00000000;
+        reg_32[31] <= 32'h00000000;
+    end
+    else if(to_load != 5'd0 && to_load < 5'd28)begin
         reg_32[to_load] <= data_load_32_i;
     end
     else if(wb_index != 5'd0)begin
         reg_32[wb_index] <= wb_data;
     end
 
-    if(simd_load && reg_32[5])begin
+    if(reset_i)begin
+        add1 <= 128'd0;
+        add2 <= 128'd0;
+    end
+    else if(simd_load && reg_32[5])begin
         add1 <= data_load_128_i;
     end
     else if(simd_load && ~reg_32[5])begin
         add2 <= data_load_128_i;
     end
 
-    if(reset_i)begin
-        for (i = 0; i < 29; i = i + 1) begin
-            reg_32[i] = 32'd0;
-        end
-        reg_32[29] = 32'h00003fff;
-        reg_32[30] = 32'h00000000;
-        reg_32[31] = 32'h00000000;
-    end
+    
 end
 
 
