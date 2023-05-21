@@ -43,26 +43,23 @@ input upg_done_i
 
 wire upg_mode = ~upg_rst_i & ~upg_done_i;
 
-reg[31:0] pc;
-assign pc_plus4_o = pc + 32'd1;
+reg[31:0] pc = 32'd0;
+wire[31:0] pc_plus4 = pc + 32'd1;
+assign pc_plus4_o = pc_plus4;
 
-always @(negedge clk_i or posedge reset_i) begin
-    if(reset_i)begin
-        pc <= 32'd0;
-    end
-    else if(pc[15:0] > 16'h3fff || mode_i == 4'd6)begin
+always @(negedge clk_i) begin
+    if(pc_plus4[15:0] > 16'h1fff || mode_i == 4'd6 || reset_i)begin
         pc <= 32'd0;
     end
     else if(j_valid_i)begin
         pc[25:0] <= j_addr_i;
     end
     else if(mode_i == 4'd5 && b_valid_i)begin
-        pc[15:0] <= pc_plus4_o[15:0] + b_addr_i;
+        pc[15:0] <= $signed(pc_plus4[15:0]) + $signed(b_addr_i);
     end
     else if(mode_i == 4'd5)begin
-        pc <= pc_plus4_o;
+        pc <= pc_plus4;
     end
-    
 end
 
 
