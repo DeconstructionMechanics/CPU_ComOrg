@@ -15,6 +15,8 @@ rd = $hi |mfhi |`000000_00000_00000_xxxrd_00000_010000`
 rd = $lo |mflo |`000000_00000_00000_xxxrd_00000_010010`
 {hi,lo} = rs * rt |mult |`000000_xxxrs_xxxrt_00000_00000_011000`
 {hi,lo} = rs *(unsign) rt |multu |`000000_xxxrs_xxxrt_00000_00000_011001`
+{hi,lo} = rs / rt, error when rt == 0|div |`000000_xxxrs_xxxrt_00000_00000_011010`
+{hi,lo} = rs /(unsign) rt, error when rt == 0|divu |`000000_xxxrs_xxxrt_00000_00000_011011`
 rd = rt + rs|add |`000000_xxxrs_xxxrt_xxxrd_00000_100000`
 rd = rt +(unsign) rs|addu |`000000_xxxrs_xxxrt_xxxrd_00000_100001`
 rd = rs - rt|sub |`000000_xxxrs_xxxrt_xxxrd_00000_100010`
@@ -61,10 +63,13 @@ pc = {pc[31:28],addr,00}, $ra = pc(next)|jal |`000011_(26'addr)`
 |---|---|---|---|
 |display in led|$v0 = 1|$a0 = data to display| |
 |read from switch|$v0 = 5| |$v0 = data read|
-|SIMD load|$v0 = 8|$a0 = source address $a1 = false(first 128bit reg)/true(second 128bit reg)||
-|SIMD add and store|$v0 = 9|$a0 = dest addr||
-|get cycle counter|$v0 = 10||$v0 = cycle counter|
-|set cycle counter to 0|$v0 = 11|||
+|read from keyboard|$v0 = 8| |$v0 = data read|
+|exit(pc = 0,pause)|$v0 = 10| ||
+|SIMD load|$v0 = 11|$a0 = source address $a1 = false(first 128bit reg)/true(second 128bit reg)||
+|SIMD add and store|$v0 = 12|$a0 = dest addr||
+|get cycle counter|$v0 = 13||$v0 = cycle counter|
+|set cycle counter to 0|$v0 = 14|||
+|cycle wait|$v0 = 15 |$a0 = num of second||
 
 ## **exception code (break)**
 |code|description|handler|
@@ -75,8 +80,9 @@ pc = {pc[31:28],addr,00}, $ra = pc(next)|jal |`000011_(26'addr)`
 4|pause|program pause|
 5|uart start|start uart|
 6|uart finish|finish uart|
+16$<=$|jump handler in this address|software handler|
 
-exception hierarchy(front will be handled first): 6,5,1,2,3,4
+exception hierarchy(front will be handled first): 6,5,1,2,3,4,others
 
 ## **CPU mode**
 |code|description|
