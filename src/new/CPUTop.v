@@ -30,7 +30,7 @@ module CPUTop(
     input fpga_clk,
     input[23:0] switch_24,
     input[3:0] keyboard_row,
-    input[3:0] keyboard_col,
+    output[3:0] keyboard_col,
     
     input rx,
     output tx,
@@ -44,6 +44,7 @@ wire set_cnt;
 wire[31:0] cycle_cnt;
 wire[3:0] exc_code;
 wire[3:0] mode;
+
 reg reset = 1'd1;
 always @(posedge clk)begin
     if(exc_code == 4'd1 | btn_rst | btn_uart)begin
@@ -56,6 +57,7 @@ end
 CtrlClk  u_CtrlClk (
     .fpga_clk_i              ( fpga_clk    ),
     .set_cnt_i               ( set_cnt     ),
+    .switch_i                (switch_24[23]),
     .exc_code_i              ( exc_code    ),
     .btn_rst_i               (btn_rst),
     .btn_err_i               (btn_err),
@@ -89,16 +91,17 @@ always @(mode or upg_done_o)begin
     end
 end
 
-uart_bmpg_0 uart(
-.upg_clk_i(clk),
-.upg_rst_i(upg_rst),
-.upg_rx_i(rx),
-.upg_clk_o(upg_clk_o),
-.upg_wen_o(upg_wen_o),
-.upg_adr_o(upg_adr_o),
-.upg_dat_o(upg_dat_o),
-.upg_done_o(upg_done_o),
-.upg_tx_o(tx)
+uart_bmpg_0  u_uart_bmpg_0 (
+    .upg_clk_i               ( clk    ),
+    .upg_rst_i               ( upg_rst    ),
+    .upg_rx_i                ( rx     ),
+
+    .upg_clk_o               ( upg_clk_o    ),
+    .upg_wen_o               ( upg_wen_o    ),
+    .upg_adr_o               ( upg_adr_o    ),
+    .upg_dat_o               ( upg_dat_o    ),
+    .upg_done_o              ( upg_done_o   ),
+    .upg_tx_o                ( tx     ) 
 );
 
 
@@ -112,7 +115,7 @@ wire[31:0] data_load_32;
 wire[127:0] data_load_128;
 
 DataMem  u_DataMem (
-    .ram_clk_i               ( clk       ),
+    .ram_clk_i               ( fpga_clk       ),
     .mode_i                  ( mode          ),
     .ram_adr_i               ( data_addr       ),
     .ram_wen_32_i            ( data_wen_32    ),
@@ -140,6 +143,7 @@ wire[31:0] instruction;
 
 IFetch  u_IFetch (
     .clk_i                   ( clk           ),
+    .fpga_clk_i              (fpga_clk),
     .mode_i                  ( mode          ),
     .reset_i                 (reset),
     .j_valid_i               ( j_valid       ),
@@ -161,6 +165,8 @@ wire[31:0] IO2led;
 wire[31:0] IO2cpu;
 wire IO_able_o;
 
+wire [3:0] keyboard_val;
+
 ExeReg  u_ExeReg (
     .clk_i                   ( clk              ),
     .mode_i                  ( mode             ),
@@ -171,6 +177,7 @@ ExeReg  u_ExeReg (
     .instruction_i           ( instruction      ),
     .cycle_cnt_i             (cycle_cnt),
     .IO_i                    ( IO2cpu),
+    .keyboard_val_i          (keyboard_val),
 
     .exc_code_o              ( exc_code      ),
     .data_addr_o             ( data_addr        ),
@@ -188,11 +195,11 @@ ExeReg  u_ExeReg (
 );
 
 
+
 OIface  u_OIface (
     .clk_i                   (clk),
     .switch_24_i             ( switch_24      ),
-    .keyboard_row_i          ( keyboard_row   ),
-    .keyboard_col_i          ( keyboard_col   ),
+    .keyboard_val_i          (keyboard_val),
     .IO_able_i               (IO_able_o),
     .IO2led_i                ( IO2led         ),
     .exc_code_i              (exc_code),
@@ -202,10 +209,28 @@ OIface  u_OIface (
     .upg_rst_i               (upg_rst),
     .upg_rx_i                (rx),
     .upg_wen_i               (upg_wen_o),
-    .upg_done_i              (upg_done_o),  
+    .upg_done_i              (upg_done_o),
+    .pc_plus4_i              (pc_plus4),
+    .instruction_i           (instruction),  
 
     .led_24_o                ( led_24         ),
     .IO2cpu_o                ( IO2cpu         ) 
+);
+
+Keyboard #(
+    .NO_KEY_PRESSED ( 6'b000_001 ),
+    .SCAN_COL0      ( 6'b000_010 ),
+    .SCAN_COL1      ( 6'b000_100 ),
+    .SCAN_COL2      ( 6'b001_000 ),
+    .SCAN_COL3      ( 6'b010_000 ),
+    .KEY_PRESSED    ( 6'b100_000 ))
+ u_Keyboard (
+    .clk                     ( fpga_clk            ),
+    .rst                     ( reset            ),
+    .row                     ( keyboard_row            ),
+
+    .col                     ( keyboard_col            ),
+    .keyboard_val            ( keyboard_val   ) 
 );
 
 
