@@ -23,8 +23,7 @@
 module OIface(
     input clk_i,
     input[23:0] switch_24_i,
-    input[3:0] keyboard_row_i,
-    input[3:0] keyboard_col_i,
+    input[3:0] keyboard_val_i,
     output[23:0] led_24_o,
 
     input[3:0] exc_code_i,
@@ -37,7 +36,9 @@ module OIface(
     input upg_rst_i,
     input upg_rx_i,
     input upg_wen_i,
-    input upg_done_i
+    input upg_done_i,
+    input[31:0] pc_plus4_i,
+    input[31:0] instruction_i
     );
 
 reg[31:0] led_buffer = 32'd0;
@@ -72,62 +73,11 @@ end
 
 reg[31:0] switch_buffer;
 assign IO2cpu_o = switch_buffer;
-reg[3:0] keyboard_value = 4'd0;
-always @(keyboard_row_i or keyboard_col_i)begin
-    case (keyboard_row_i)
-        4'b0001:
-        case (keyboard_col_i)
-            4'b0001: keyboard_value <= 4'd1;
-            4'b0010: keyboard_value <= 4'd2;
-            4'b0100: keyboard_value <= 4'd3;
-            4'b1000: keyboard_value <= 4'd10;
-        endcase
-        4'b0010:
-        case (keyboard_col_i)
-            4'b0001: keyboard_value <= 4'd4;
-            4'b0010: keyboard_value <= 4'd5;
-            4'b0100: keyboard_value <= 4'd6;
-            4'b1000: keyboard_value <= 4'd11;
-        endcase
-        4'b0100:
-        case (keyboard_col_i)
-            4'b0001: keyboard_value <= 4'd7;
-            4'b0010: keyboard_value <= 4'd8;
-            4'b0100: keyboard_value <= 4'd9;
-            4'b1000: keyboard_value <= 4'd12;
-        endcase
-        4'b1000:
-        case (keyboard_col_i)
-            4'b0001: keyboard_value <= 4'd14;
-            4'b0010: keyboard_value <= 4'd0;
-            4'b0100: keyboard_value <= 4'd15;
-            4'b1000: keyboard_value <= 4'd13;
-        endcase
-    endcase
-end
-reg valid_flag = 0; // 0 switch; 1 keyboard
-reg [3:0] prev_keyboard_value = 4'd0;
 
-always @(keyboard_value,switch_24_i) begin
-    if (keyboard_value != prev_keyboard_value) begin
-        valid_flag <= 1;
-        prev_keyboard_value <= keyboard_value;
-    end
-    else begin
-        valid_flag <= 0;
-    end
-end
-always @(*)begin
-    if(valid_flag)begin
-        switch_buffer[7:0] <= {4'd0,keyboard_value};
-    end
-    else begin
-        switch_buffer <= {8'd0,switch_24_i};
-    end
+always @(*) begin
+    switch_buffer <= {8'd0,switch_24_i};
 end
 
-
-assign led_24_o[23:20] = mode_i;
-assign led_24_o[19:0] = led_buffer[19:0];
+assign led_24_o = (switch_24_i[23]) ? {clk_i,mode_i[2:0],(pc_plus4_i[7:0] - 8'd1),instruction_i[31:26],instruction_i[5:0]} : {mode_i,led_buffer[19:0]};
 
 endmodule
