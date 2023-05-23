@@ -69,7 +69,7 @@ pc = {pc[31:28],addr,00}, $ra = pc(next)|jal |`000011_(26'addr)`
 |SIMD add and store|$v0 = 12|$a0 = dest addr||
 |get cycle counter|$v0 = 13||$v0 = cycle counter|
 |set cycle counter to 0|$v0 = 14|||
-|cycle wait|$v0 = 15 |$a0 = num of second||
+|exception(=break)|$v0 = 15 |$a0 = exception code||
 
 ## **exception code (break)**
 |code|description|handler|
@@ -80,7 +80,7 @@ pc = {pc[31:28],addr,00}, $ra = pc(next)|jal |`000011_(26'addr)`
 4|pause|program pause|
 5|uart start|start uart|
 6|uart finish|finish uart|
-16$<=$|jump handler in this address|software handler|
+0x4000$<=$|jump handler in this address|software handler|
 
 exception hierarchy(front will be handled first): 6,5,1,2,3,4,others
 
