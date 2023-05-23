@@ -33,6 +33,7 @@ input[31:0] instruction_i,
 
 input[31:0] cycle_cnt_i,
 input[31:0] IO_i,
+input[3:0] keyboard_val_i,
 
 output[3:0] exc_code_o,
 output[31:0] data_addr_o,
@@ -71,7 +72,7 @@ wire[25:0] address = instruction_i[25:0];
 
 reg [25:0] j_addr = 26'd0;
 assign j_addr_o = j_addr;
-assign j_valid_o = (mode_i == 4'd5) & (((opcode == 6'd0) & (funct == 6'b001000))|(opcode == 6'b000010)|(opcode == 6'b000011));
+assign j_valid_o = (mode_i == 4'd5) & ((funct == 6'b001100 & reg_32[2] == 32'd15 & reg_32[4][14])|(funct == 6'b001101 & rt[4])|(funct == 6'b001100 & reg_32[2] == 32'd10)|((opcode == 6'd0) & (funct == 6'b001000))|(opcode == 6'b000010)|(opcode == 6'b000011));
 
 reg [15:0] b_addr = 16'd0;
 reg b_cond = 1'b0;
@@ -193,7 +194,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= 5'd0;
-                    j_addr <= reg_32[rs][25:0];
+                    j_addr <= reg_32[rs][25:0];// - 26'd2;
                 end
             6'b010000:begin //mfhi
                     simd_load <= 1'b0;
@@ -242,6 +243,30 @@ always @(posedge clk_i)begin
 
                     wb_index <= 5'd0;
                     {hi,lo} <= (reg_32[rt]) * (reg_32[rs]);
+                end
+            6'b011000:begin //div
+                    simd_load <= 1'b0;
+                    to_load <= 5'd0;
+                    cycle_reset <= 1'b0;
+                    IO_able <= 1'b0;
+                    data_wen_32 <= 1'b0;
+                    data_wen_128 <= 1'b0;
+
+                    wb_index <= 5'd0;
+                    {hi,lo} <= $signed(reg_32[rt]) / $signed(reg_32[rs]);
+                    exc_code <= (reg_32[rs] == 32'd0)? 4'd2 : 4'd0;
+                end
+            6'b011001:begin //divu
+                    simd_load <= 1'b0;
+                    to_load <= 5'd0;
+                    cycle_reset <= 1'b0;
+                    IO_able <= 1'b0;
+                    data_wen_32 <= 1'b0;
+                    data_wen_128 <= 1'b0;
+
+                    wb_index <= 5'd0;
+                    {hi,lo} <= (reg_32[rt]) / (reg_32[rs]);
+                    exc_code <= (reg_32[rs] == 32'd0)? 4'd2 : 4'd0;
                 end
             6'b100000:begin //add
                     simd_load <= 1'b0;
@@ -392,6 +417,30 @@ always @(posedge clk_i)begin
                                 wb_data <= IO_i;
                             end
                         32'd8:begin
+                                simd_load <= 1'b0;
+                                to_load <= 5'd0;
+                                cycle_reset <= 1'b0;
+                                IO_able <= 1'b0;
+                                data_wen_32 <= 1'b0;
+                                data_wen_128 <= 1'b0;
+
+                                wb_index <= 5'd2;
+                                wb_data <= {28'd0,keyboard_val_i};
+                            end
+                        32'd10:begin
+                                simd_load <= 1'b0;
+                                to_load <= 5'd0;
+                                cycle_reset <= 1'b0;
+                                IO_able <= 1'b0;
+                                exc_code <= 4'd0;
+                                data_wen_32 <= 1'b0;
+                                data_wen_128 <= 1'b0;
+                                wb_index <= 5'd0;
+
+                                j_addr <= 26'd0;
+                                exc_code <= 4'd4;
+                            end
+                        32'd11:begin
                                 to_load <= 5'd0;
                                 cycle_reset <= 1'b0;
                                 IO_able <= 1'b0;
@@ -403,7 +452,7 @@ always @(posedge clk_i)begin
                                 data_addr <= reg_32[4];
                                 simd_load <= 1'b1;
                             end
-                        32'd9:begin
+                        32'd12:begin
                                 simd_load <= 1'b0;
                                 to_load <= 5'd0;
                                 cycle_reset <= 1'b0;
@@ -419,7 +468,7 @@ always @(posedge clk_i)begin
                                 add_r[31:0] <= add1[31:0] + add2[31:0];
                                 data_wen_128 <= 1'b1;
                             end
-                        32'd10:begin
+                        32'd13:begin
                                 simd_load <= 1'b0;
                                 to_load <= 5'd0;
                                 cycle_reset <= 1'b0;
@@ -431,7 +480,7 @@ always @(posedge clk_i)begin
                                 wb_index <= 5'd2;
                                 wb_data <= cycle_cnt_i;
                             end
-                        32'd11:begin
+                        32'd14:begin
                                 simd_load <= 1'b0;
                                 to_load <= 5'd0;
                                 IO_able <= 1'b0;
@@ -442,6 +491,26 @@ always @(posedge clk_i)begin
 
                                 cycle_reset <= 1'b1;
                             end
+                        32'd15:begin
+                                simd_load <= 1'b0;
+                                to_load <= 5'd0;
+                                cycle_reset <= 1'b0;
+                                IO_able <= 1'b0;
+                                data_wen_32 <= 1'b0;
+                                data_wen_128 <= 1'b0;
+                                
+                                if(reg_32[4][14])begin
+                                    exc_code <= 4'd0;
+
+                                    wb_index <= 5'd31;
+                                    j_addr <= reg_32[4][25:0];
+                                    wb_data <= pc_plus4_i;
+                                end
+                                else begin
+                                    wb_index <= 5'd0;
+                                    exc_code <= shamt[3:0];
+                                end
+                            end
                     endcase
                 end
             6'b001101:begin //break
@@ -451,9 +520,18 @@ always @(posedge clk_i)begin
                     IO_able <= 1'b0;
                     data_wen_32 <= 1'b0;
                     data_wen_128 <= 1'b0;
-                    wb_index <= 5'd0;
+                    
+                    if(rt[4])begin
+                        exc_code <= 4'd0;
 
-                    exc_code <= shamt[3:0];
+                        wb_index <= 5'd31;
+                        j_addr <= {instruction_i[31:6]};
+                        wb_data <= pc_plus4_i;
+                    end
+                    else begin
+                        wb_index <= 5'd0;
+                        exc_code <= shamt[3:0];
+                    end
                 end
         endcase
     end
@@ -644,7 +722,7 @@ always @(negedge clk_i)begin
         for (i = 0; i < 29; i = i + 1) begin
             reg_32[i] <= 32'd0;
         end
-        reg_32[29] <= 32'h00003fff;
+        reg_32[29] <= 32'hfffff000;
         reg_32[30] <= 32'h00000000;
         reg_32[31] <= 32'h00000000;
     end
