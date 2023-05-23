@@ -22,6 +22,7 @@
 
 module IFetch(
 input clk_i,
+input fpga_clk_i,
 input[3:0] mode_i, // CPU mode
 input reset_i,
 input j_valid_i,
@@ -48,11 +49,11 @@ wire[31:0] pc_plus4 = pc + 32'd1;
 assign pc_plus4_o = pc_plus4;
 
 always @(negedge clk_i) begin
-    if(pc_plus4[15:0] > 16'h1fff || mode_i == 4'd6 || reset_i)begin
+    if(pc_plus4[15:0] == 16'h3fff || pc_plus4[15:0] > 16'h4fff || mode_i == 4'd6 || reset_i)begin
         pc <= 32'd0;
     end
     else if(j_valid_i)begin
-        pc[25:0] <= j_addr_i;
+        pc[25:0] <= j_addr_i;// + 26'd2;
     end
     else if(mode_i == 4'd5 && b_valid_i)begin
         pc[15:0] <= $signed(pc_plus4[15:0]) + $signed(b_addr_i);
@@ -62,14 +63,25 @@ always @(negedge clk_i) begin
     end
 end
 
-
+wire[31:0] instruction_text;
+wire[31:0] instruction_handler;
+assign instruction_o = (pc[14])? instruction_handler : instruction_text;
 text_32_14  u_text_32_14 (
-    .clka                    ( upg_mode ? upg_clk_i : clk_i    ),
+    .clka                    ( upg_mode ? upg_clk_i : fpga_clk_i    ),
     .wea                     ( upg_mode ? upg_wen_i : 1'b0     ),
     .addra                   ( upg_mode ? upg_adr_i : pc[13:0] ),
     .dina                    ( upg_mode ? upg_dat_i : 32'd0    ),
 
-    .douta                   ( instruction_o   ) 
+    .douta                   ( instruction_text   ) 
+);
+
+handler_32_12  u_handler_32_12 (
+    .clka                    ( fpga_clk_i    ),
+    .wea                     ( 1'b0     ),
+    .addra                   ( pc[11:0]   ),
+    .dina                    ( 32'd0    ),
+
+    .douta                   ( instruction_handler   ) 
 );
 
 endmodule
