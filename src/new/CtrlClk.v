@@ -23,6 +23,7 @@
 module CtrlClk(
 input fpga_clk_i,
 input set_cnt_i,
+input switch_i,
 output clk_o,
 output[31:0] cycle_cnt_o,
 
@@ -35,6 +36,7 @@ input btn_uart_i,
 output[3:0] mode_o
     );
 
+wire clk_ip;
 wire clk;
 assign clk_o = clk;
 reg[31:0] cycle_cnt = 32'd0;
@@ -45,8 +47,13 @@ assign mode_o = mode;
 
 Clk_10MHz  u_Clk_10MHz (
     .clk_in1                 ( fpga_clk_i    ),
-    .clk_out1                ( clk   )
+    .clk_out1                ( clk_ip   )
 );
+reg[22:0] cnt;
+always @(posedge clk_ip)begin
+    cnt <= cnt + 23'd1;
+end
+assign clk = (switch_i) ? cnt[22] : clk_ip;
 
 always @(negedge clk)begin
     if(set_cnt_i)begin
