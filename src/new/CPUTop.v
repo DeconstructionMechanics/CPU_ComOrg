@@ -165,7 +165,7 @@ wire[31:0] IO2led;
 wire[31:0] IO2cpu;
 wire IO_able_o;
 
-wire [3:0] keyboard_val;
+wire [4:0] keyboard_val;
 
 ExeReg  u_ExeReg (
     .clk_i                   ( clk              ),
@@ -199,7 +199,7 @@ ExeReg  u_ExeReg (
 OIface  u_OIface (
     .clk_i                   (clk),
     .switch_24_i             ( switch_24      ),
-    .keyboard_val_i          (keyboard_val),
+    .keyboard_val_i          (keyboard_val[3:0]),
     .IO_able_i               (IO_able_o),
     .IO2led_i                ( IO2led         ),
     .exc_code_i              (exc_code),
@@ -230,7 +230,7 @@ Keyboard #(
     .row                     ( keyboard_row            ),
 
     .col                     ( keyboard_col            ),
-    .keyboard_val            ( keyboard_val   ) 
+    .keyboard_o              ( keyboard_val   ) 
 );
 
 
