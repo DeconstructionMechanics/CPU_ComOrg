@@ -33,7 +33,7 @@ input[31:0] instruction_i,
 
 input[31:0] cycle_cnt_i,
 input[31:0] IO_i,
-input[3:0] keyboard_val_i,
+input[4:0] keyboard_val_i,
 
 output[3:0] exc_code_o,
 output[31:0] data_addr_o,
@@ -425,7 +425,7 @@ always @(posedge clk_i)begin
                                 data_wen_128 <= 1'b0;
 
                                 wb_index <= 5'd2;
-                                wb_data <= {28'd0,keyboard_val_i};
+                                wb_data <= {27'd0,keyboard_val_i};
                             end
                         32'd10:begin
                                 simd_load <= 1'b0;
@@ -508,7 +508,7 @@ always @(posedge clk_i)begin
                                 end
                                 else begin
                                     wb_index <= 5'd0;
-                                    exc_code <= shamt[3:0];
+                                    exc_code <= reg_32[4][3:0];
                                 end
                             end
                     endcase
