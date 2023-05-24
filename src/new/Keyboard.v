@@ -25,7 +25,7 @@ module Keyboard(
   input           rst,
   input      [3:0] row,                 // 矩阵键盘 行
   output reg [3:0] col,                 // 矩阵键盘 列
-  output reg [3:0] keyboard_val
+  output [4:0] keyboard_o
 );
  
 //++++++++++++++++++++++++++++++++++++++
@@ -135,6 +135,8 @@ always @ (posedge key_clk or posedge rst)
 //++++++++++++++++++++++++++++++++++++++
 // 扫描行列值部分 开始
 //++++++++++++++++++++++++++++++++++++++
+reg [3:0] keyboard_val;
+assign keyboard_o = {key_pressed_flag,keyboard_val};
 
 always @ (posedge key_clk or posedge rst)
   if (rst)
