@@ -75,7 +75,7 @@ reg[31:0] switch_buffer;
 assign IO2cpu_o = switch_buffer;
 
 always @(*) begin
-    switch_buffer <= {8'd0,switch_24_i};
+    switch_buffer <= {9'd0,switch_24_i[22:0]};
 end
 
 assign led_24_o = (switch_24_i[23]) ? {clk_i,mode_i[2:0],(pc_plus4_i[7:0] - 8'd1),instruction_i[31:26],instruction_i[5:0]} : {mode_i,led_buffer[19:0]};
