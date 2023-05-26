@@ -49,7 +49,12 @@ output[15:0] b_addr_o,
 
 output set_cnt_o,
 output IO_able_o,
-output[31:0] IO_o
+output[31:0] IO_o,
+
+
+//
+output[31:0] hi_o,
+output[31:0] lo_o
     );
 
 reg [31:0] reg_32 [0:31];
@@ -59,6 +64,10 @@ reg [127:0] add1 = 128'd0;
 reg [127:0] add2 = 128'd0;
 reg [127:0] add_r = 128'd0;
 
+reg [31:0] next_hi = 32'd0;
+reg [31:0] next_lo = 32'd0;
+assign hi_o = hi;
+assign lo_o = lo;
 
 wire[5:0] opcode = instruction_i[31:26];
 wire[4:0] rs = instruction_i[25:21];
@@ -230,7 +239,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= 5'd0;
-                    {hi,lo} <= $signed(reg_32[rt]) * $signed(reg_32[rs]);
+                    {next_hi,next_lo} <= $signed(reg_32[rt]) * $signed(reg_32[rs]);
                 end
             6'b011001:begin //multu
                     simd_load <= 1'b0;
@@ -242,7 +251,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= 5'd0;
-                    {hi,lo} <= (reg_32[rt]) * (reg_32[rs]);
+                    {next_hi,next_lo} <= (reg_32[rt]) * (reg_32[rs]);
                 end
             6'b011000:begin //div
                     simd_load <= 1'b0;
@@ -253,8 +262,9 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= 5'd0;
-                    {hi,lo} <= $signed(reg_32[rt]) / $signed(reg_32[rs]);
-                    exc_code <= (reg_32[rs] == 32'd0)? 4'd2 : 4'd0;
+                    next_lo <= $signed(reg_32[rs]) / $signed(reg_32[rt]);
+                    next_hi <= $signed(reg_32[rs]) % $signed(reg_32[rt]);
+                    exc_code <= (reg_32[rt] == 32'd0)? 4'd2 : 4'd0;
                 end
             6'b011001:begin //divu
                     simd_load <= 1'b0;
@@ -265,8 +275,9 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= 5'd0;
-                    {hi,lo} <= (reg_32[rt]) / (reg_32[rs]);
-                    exc_code <= (reg_32[rs] == 32'd0)? 4'd2 : 4'd0;
+                    next_lo <= (reg_32[rs]) / (reg_32[rt]);
+                    next_hi <= (reg_32[rs]) % (reg_32[rt]);
+                    exc_code <= (reg_32[rt] == 32'd0)? 4'd2 : 4'd0;
                 end
             6'b100000:begin //add
                     simd_load <= 1'b0;
@@ -572,7 +583,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
                     wb_index <= 5'd0;
 
-                    data_addr <= reg_32[rs] + immediate;
+                    data_addr <= $signed(reg_32[rs]) + $signed({{16{immediate[15]}},immediate});
                     to_load <= rt;
                 end
             6'b101011:begin //sw
@@ -584,7 +595,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
                     wb_index <= 5'd0;
 
-                    data_addr <= reg_32[rs] + immediate;
+                    data_addr <= $signed(reg_32[rs]) + $signed({{16{immediate[15]}},immediate});
                     to_store <= rt;
                     data_wen_32 <= 1'b1;
                 end
@@ -598,7 +609,7 @@ always @(posedge clk_i)begin
                     data_wen_128 <= 1'b0;
 
                     wb_index <= rt;
-                    wb_data <= $signed(reg_32[rs]) + $signed({16'd0,immediate});
+                    wb_data <= $signed(reg_32[rs]) + $signed({{16{immediate[15]}},immediate});
                 end
             6'b001001:begin //addiu
                     simd_load <= 1'b0;
@@ -685,6 +696,7 @@ always @(posedge clk_i)begin
 
                     wb_index <= rt;
                     wb_data[31:16] <= immediate;
+                    wb_data[15:0] <= 16'd0;
                 end
             6'b000010:begin //j
                     simd_load <= 1'b0;
@@ -744,7 +756,8 @@ always @(negedge clk_i)begin
         add2 <= data_load_128_i;
     end
 
-    
+    lo <= next_lo;
+    hi <= next_hi;
 end
 
 
