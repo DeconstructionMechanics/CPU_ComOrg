@@ -522,6 +522,16 @@ always @(posedge clk_i)begin
                                     exc_code <= reg_32[4][3:0];
                                 end
                             end
+                        default:begin
+                            simd_load <= 1'b0;
+                            to_load <= 5'd0;
+                            cycle_reset <= 1'b0;
+                            IO_able <= 1'b0;
+                            exc_code <= 4'd0;
+                            data_wen_32 <= 1'b0;
+                            data_wen_128 <= 1'b0;
+                            wb_index <= 5'd0;
+                        end 
                     endcase
                 end
             6'b001101:begin //break
@@ -544,6 +554,16 @@ always @(posedge clk_i)begin
                         exc_code <= shamt[3:0];
                     end
                 end
+            default:begin
+                    simd_load <= 1'b0;
+                    to_load <= 5'd0;
+                    cycle_reset <= 1'b0;
+                    IO_able <= 1'b0;
+                    exc_code <= 4'd0;
+                    data_wen_32 <= 1'b0;
+                    data_wen_128 <= 1'b0;
+                    wb_index <= 5'd0;
+                end 
         endcase
     end
     else if(mode_i == 4'd5)begin // other format
@@ -723,6 +743,16 @@ always @(posedge clk_i)begin
                     j_addr <= address;
                     wb_data <= pc_plus4_i;
                 end
+            default:begin
+                    simd_load <= 1'b0;
+                    to_load <= 5'd0;
+                    cycle_reset <= 1'b0;
+                    IO_able <= 1'b0;
+                    exc_code <= 4'd0;
+                    data_wen_32 <= 1'b0;
+                    data_wen_128 <= 1'b0;
+                    wb_index <= 5'd0;
+                end 
         endcase
     end
 end
